@@ -76,7 +76,9 @@ public class GolfClub : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Swing();
-            currentState = State.BallMoving;
+            // Set state after delay to allow ball to pick up speed, preventing race condition where state is
+            // immediately reset to positioning.
+            Invoke("SetStateBallMoving", 0.5f);
         }
 
         // Right mouse button click
@@ -88,12 +90,7 @@ public class GolfClub : MonoBehaviour
 
     private void BallMoving()
     {
-        print(golfBallRigidBody.velocity.magnitude);
-        if (golfBallRigidBody.velocity.magnitude < 0.5f)
-        {
-            golfBallRigidBody.velocity = new Vector3(0, 0, 0);
-            golfBallRigidBody.angularVelocity = new Vector3(0, 0, 0);
-        }
+        CheckBallMovementComplete();
     }
 
     private void SetGolfClubPosition()
@@ -137,6 +134,23 @@ public class GolfClub : MonoBehaviour
     private void Swing()
     {
         golfBall.GetComponent<Rigidbody>().AddForce(clubToBallVector.normalized * -(forceMultiplier * swingDistance), ForceMode.Impulse);
+    }
+
+    // Defined as a separate function so Invoke can be called correctly
+    private void SetStateBallMoving()
+    {
+        currentState = State.BallMoving;
+    }
+
+    private void CheckBallMovementComplete()
+    {
+        if (golfBallRigidBody.velocity.magnitude < 0.5f)
+        {
+            golfBallRigidBody.velocity = new Vector3(0, 0, 0);
+            golfBallRigidBody.angularVelocity = new Vector3(0, 0, 0);
+            golfBallPosition = golfBall.transform.position;
+            currentState = State.Positioning;
+        }
     }
 
     private Vector3 GetMousePositionInWorld()
