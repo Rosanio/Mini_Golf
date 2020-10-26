@@ -23,7 +23,8 @@ public class GolfClub : MonoBehaviour
     private Plane swingThresholdPlane;
     private Vector3 golfBallPosition;
 
-    private GameObject golfBall;
+    private GameObject golfBallGameObject;
+    private GolfBall golfBall;
     private Rigidbody golfBallRigidBody;
 
     private const float Z_OFFSET_CLUB_TO_BALL = 0.1f;
@@ -31,14 +32,15 @@ public class GolfClub : MonoBehaviour
 
     void Start()
     {
-        golfBall = GameObject.Find("GolfBall");
-        golfBallRigidBody = golfBall.GetComponent<Rigidbody>();
-        yOffsetClubToBall = transform.position.y - golfBall.transform.position.y;
+        golfBallGameObject = GameObject.Find("GolfBall");
+        golfBallRigidBody = golfBallGameObject.GetComponent<Rigidbody>();
+        golfBall = golfBallGameObject.GetComponent<GolfBall>();
+        yOffsetClubToBall = transform.position.y - golfBallGameObject.transform.position.y;
         currentState = State.Positioning;
 
         positionRotation = transform.rotation;
 
-        golfBallPosition = golfBall.transform.position;
+        golfBallPosition = golfBallGameObject.transform.position;
     }
 
     void Update()
@@ -133,29 +135,28 @@ public class GolfClub : MonoBehaviour
 
     private void Swing()
     {
-        golfBall.GetComponent<Rigidbody>().AddForce(clubToBallVector.normalized * -(forceMultiplier * swingDistance), ForceMode.Impulse);
+        golfBallGameObject.GetComponent<Rigidbody>().AddForce(clubToBallVector.normalized * -(forceMultiplier * swingDistance), ForceMode.Impulse);
     }
 
     // Defined as a separate function so Invoke can be called correctly
     private void SetStateBallMoving()
     {
+        golfBall.IsMoving = true;
         currentState = State.BallMoving;
     }
 
     private void CheckBallMovementComplete()
     {
-        if (golfBallRigidBody.velocity.magnitude < 0.5f)
+        if (!golfBall.IsMoving)
         {
-            golfBallRigidBody.velocity = new Vector3(0, 0, 0);
-            golfBallRigidBody.angularVelocity = new Vector3(0, 0, 0);
-            golfBallPosition = golfBall.transform.position;
+            golfBallPosition = golfBallGameObject.transform.position;
             currentState = State.Positioning;
         }
     }
 
     private Vector3 GetMousePositionInWorld()
     {
-        Plane plane = new Plane(Vector3.up, -golfBall.transform.position.y);
+        Plane plane = new Plane(Vector3.up, -golfBallGameObject.transform.position.y);
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         // Since the camera is facing the plane we're using, it should be impossible for this function to fail.
         plane.Raycast(ray, out float distance);
