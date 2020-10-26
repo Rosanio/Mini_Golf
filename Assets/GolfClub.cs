@@ -7,7 +7,7 @@ public class GolfClub : MonoBehaviour
     [SerializeField] float forceMultiplier = 5.0f;
 
     // Game State
-    private enum State { Positioning, Swinging, BallMoving }
+    private enum State { Positioning, Swinging, BallMoving, LevelComplete }
     private State currentState;
 
     // Useful reference values and vectors
@@ -149,8 +149,16 @@ public class GolfClub : MonoBehaviour
     {
         if (!golfBall.IsMoving)
         {
-            golfBallPosition = golfBallGameObject.transform.position;
-            currentState = State.Positioning;
+            if (golfBall.ballInHole)
+            {
+                currentState = State.LevelComplete;
+                print("Level complete!");
+            }
+            else
+            {
+                golfBallPosition = golfBallGameObject.transform.position;
+                currentState = State.Positioning;
+            }
         }
     }
 
