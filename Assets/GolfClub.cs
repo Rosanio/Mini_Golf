@@ -5,6 +5,7 @@ using UnityEngine;
 public class GolfClub : MonoBehaviour
 {
     [SerializeField] float forceMultiplier = 5.0f;
+    [SerializeField] SpriteRenderer arrow;
 
     // Game State
     private enum State { Positioning, Swinging, BallMoving, LevelComplete }
@@ -41,6 +42,8 @@ public class GolfClub : MonoBehaviour
         positionRotation = transform.rotation;
 
         golfBallPosition = golfBallGameObject.transform.position;
+
+        arrow.enabled = true;
     }
 
     void Update()
@@ -106,6 +109,9 @@ public class GolfClub : MonoBehaviour
 
         transform.position = golfBallPosition + clubToBallVector*0.5f + new Vector3(0, yOffsetClubToBall, Z_OFFSET_CLUB_TO_BALL);
         transform.rotation = q * positionRotation;
+
+        arrow.transform.position = golfBallPosition - clubToBallVector;
+        arrow.transform.rotation = q * Quaternion.AngleAxis(90f, Vector3.right) * Quaternion.AngleAxis(180f, Vector3.up);
     }
 
     private void SetGolfClubSwing()
