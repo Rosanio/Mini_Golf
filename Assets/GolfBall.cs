@@ -7,7 +7,7 @@ public class GolfBall : MonoBehaviour
     [HideInInspector] public bool IsMoving = false;
     [HideInInspector] public bool ballInHole = false;
 
-    [SerializeField] ParticleSystem SuccessParticles;
+    [SerializeField] ParticleSystem SuccessParticles = null;
 
     private Rigidbody rigidBody;
     private Vector3 lastVelocity;
@@ -20,16 +20,20 @@ public class GolfBall : MonoBehaviour
     {
         lastVelocity = rigidBody.velocity;
 
+        
         if (IsMoving && lastVelocity.magnitude < 0.5f)
         {
+            print("Stopping");
             StopMoving();
         }
+        
     }
 
     protected void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Wall")
         {
+            print("Collision");
             float speed = lastVelocity.magnitude;
             Vector3 direction = Vector3.Reflect(lastVelocity.normalized, collision.contacts[0].normal);
             rigidBody.velocity = direction * speed;

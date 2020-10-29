@@ -5,7 +5,7 @@ using UnityEngine;
 public class GolfClub : MonoBehaviour
 {
     [SerializeField] float forceMultiplier = 5.0f;
-    [SerializeField] SpriteRenderer arrow;
+    [SerializeField] SpriteRenderer arrow = null;
 
     // Game State
     private enum State { Positioning, Swinging, BallMoving, LevelComplete }
@@ -101,6 +101,7 @@ public class GolfClub : MonoBehaviour
     private void SetGolfClubPosition()
     {
         Vector3 mouseInWorld = GetMousePositionInWorld();
+        golfBallPosition = golfBallGameObject.transform.position;
         clubToBallVector = mouseInWorld - golfBallPosition;
         clubToBallVector.Normalize();
 
