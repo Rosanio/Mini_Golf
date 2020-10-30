@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Net.WebSockets;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GolfClub : MonoBehaviour
 {
     [SerializeField] float forceMultiplier = 5.0f;
     [SerializeField] SpriteRenderer arrow = null;
+    [SerializeField] Slider swingPowerSlider = null;
 
     // Game State
     private enum State { Positioning, Swinging, BallMoving, LevelComplete }
@@ -129,6 +131,8 @@ public class GolfClub : MonoBehaviour
 
         transform.position = clubRotationPivotPoint - (clubRotation * (clubRotationPivotPoint - swingPosition));
         transform.rotation = clubRotation * swingRotation;
+
+        swingPowerSlider.value = swingDistance / MAX_SWING_DISTANCE;
     }
 
     private void InitializeSwingingState()
