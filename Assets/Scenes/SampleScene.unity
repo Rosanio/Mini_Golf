@@ -1922,6 +1922,10 @@ PrefabInstance:
       propertyPath: swingPowerSlider
       value: 
       objectReference: {fileID: 409829718}
+    - target: {fileID: 254101749, guid: 21ec5bb8a6e61f5438ad581f7690d84b, type: 3}
+      propertyPath: swingAnimationSpeed
+      value: 0.15
+      objectReference: {fileID: 0}
     - target: {fileID: 2676223775539530778, guid: 21ec5bb8a6e61f5438ad581f7690d84b,
         type: 3}
       propertyPath: m_Name

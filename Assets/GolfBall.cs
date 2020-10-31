@@ -23,7 +23,6 @@ public class GolfBall : MonoBehaviour
         
         if (IsMoving && lastVelocity.magnitude < 0.5f)
         {
-            print("Stopping");
             StopMoving();
         }
         
@@ -33,7 +32,6 @@ public class GolfBall : MonoBehaviour
     {
         if (collision.gameObject.tag == "Wall")
         {
-            print("Collision");
             float speed = lastVelocity.magnitude;
             Vector3 direction = Vector3.Reflect(lastVelocity.normalized, collision.contacts[0].normal);
             rigidBody.velocity = direction * speed;

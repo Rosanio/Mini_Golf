@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.WebSockets;
+﻿using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,15 +7,17 @@ public class GolfClub : MonoBehaviour
     [SerializeField] float forceMultiplier = 5.0f;
     [SerializeField] SpriteRenderer arrow = null;
     [SerializeField] Slider swingPowerSlider = null;
+    [SerializeField] float swingAnimationSpeed = 1.0f;
 
     // Game State
-    private enum State { Positioning, Swinging, BallMoving, LevelComplete }
+    private enum State { Positioning, Swinging, PlayingSwingAnimation, BallMoving, LevelComplete }
     private State currentState;
 
     // Useful reference values and vectors
     private float yOffsetClubToBall;
     private Vector3 clubToBallVector;
     private float swingDistance;
+    private float swingAnimationDegreesPerSecond;
 
     // Cached transform values
     private Quaternion positionRotation;
@@ -25,27 +26,31 @@ public class GolfClub : MonoBehaviour
     private Vector3 perpendicularToSwing;
     private Plane swingThresholdPlane;
     private Vector3 golfBallPosition;
+    private Vector3 swingPivotPoint;
 
+    // Golf Ball References
     private GameObject golfBallGameObject;
     private GolfBall golfBall;
-    private Rigidbody golfBallRigidBody;
 
-    private const float Z_OFFSET_CLUB_TO_BALL = 0.1f;
+    // Constants
+    private const float Z_OFFSET_CLUB_TO_BALL = -0.1f;
     private const float MAX_SWING_DISTANCE = 2f;
 
     void Start()
     {
+        // Initialize instance variables
         golfBallGameObject = GameObject.Find("GolfBall");
-        golfBallRigidBody = golfBallGameObject.GetComponent<Rigidbody>();
         golfBall = golfBallGameObject.GetComponent<GolfBall>();
         yOffsetClubToBall = transform.position.y - golfBallGameObject.transform.position.y;
+        
+        // Initialize positioning state
         currentState = State.Positioning;
-
         positionRotation = transform.rotation;
-
         golfBallPosition = golfBallGameObject.transform.position;
 
+        // Initialize UI
         arrow.enabled = true;
+        swingPowerSlider.value = 0;
     }
 
     void Update()
@@ -58,8 +63,13 @@ public class GolfClub : MonoBehaviour
             case State.Swinging:
                 Swinging();
                 break;
+            case State.PlayingSwingAnimation:
+                PlayingSwingAnimation();
+                break;
             case State.BallMoving:
                 BallMoving();
+                break;
+            default:
                 break;
         }
     }
@@ -82,16 +92,31 @@ public class GolfClub : MonoBehaviour
         // Left mouse button click
         if (Input.GetMouseButtonDown(0))
         {
-            Swing();
-            // Set state after delay to allow ball to pick up speed, preventing race condition where state is
-            // immediately reset to positioning.
-            Invoke("SetStateBallMoving", 0.5f);
+            PlaySwingAnimation();
         }
 
         // Right mouse button click
         if (Input.GetMouseButtonDown(1))
         {
             currentState = State.Positioning;
+        }
+    }
+
+    private void PlayingSwingAnimation()
+    {
+        float zAngle = transform.rotation.eulerAngles.z - (swingAnimationDegreesPerSecond * Time.deltaTime);
+        print(zAngle);
+        // zAngle resets to 360 when it goes to negatives, this will stop it rotating at -20 degrees
+        if (zAngle < 300.0f || zAngle > 330.0f)
+        {
+            RotateClubAboutPoint(zAngle, swingPivotPoint);
+        }
+        if (zAngle < Mathf.Epsilon)
+        {
+            Swing();
+            // Set state after delay to allow ball to pick up speed, preventing race condition where state is
+            // immediately reset to positioning.
+            Invoke(nameof(SetStateBallMoving), 0.5f);
         }
     }
 
@@ -125,12 +150,9 @@ public class GolfClub : MonoBehaviour
         Vector3 projectedMouseToBallVector = Vector3.Project(mouseToBallVector, clubToBallVector);
         swingDistance = GetConstrainedSwingDistance(projectedMouseToBallVector);
 
-        Vector3 clubRotationPivotPoint = swingPosition + new Vector3(0, 1.5f, 0);
+        swingPivotPoint = swingPosition + new Vector3(0, 1.5f, 0);
         float swingAngle = swingDistance * 30.0f;
-        Quaternion clubRotation = Quaternion.AngleAxis(swingAngle, perpendicularToSwing);
-
-        transform.position = clubRotationPivotPoint - (clubRotation * (clubRotationPivotPoint - swingPosition));
-        transform.rotation = clubRotation * swingRotation;
+        RotateClubAboutPoint(swingAngle, swingPivotPoint);
 
         swingPowerSlider.value = swingDistance / MAX_SWING_DISTANCE;
     }
@@ -142,6 +164,12 @@ public class GolfClub : MonoBehaviour
         perpendicularToSwing = Vector3.Cross(clubToBallVector, Vector3.up);
         swingThresholdPlane = new Plane(clubToBallVector, Vector3.up);
         currentState = State.Swinging;
+    }
+
+    private void PlaySwingAnimation()
+    {
+        swingAnimationDegreesPerSecond = transform.rotation.eulerAngles.z / swingAnimationSpeed;
+        currentState = State.PlayingSwingAnimation;
     }
 
     private void Swing()
@@ -168,6 +196,7 @@ public class GolfClub : MonoBehaviour
             else
             {
                 golfBallPosition = golfBallGameObject.transform.position;
+                swingPowerSlider.value = 0;
                 currentState = State.Positioning;
             }
         }
@@ -196,5 +225,13 @@ public class GolfClub : MonoBehaviour
             swingDistance = 0;
         }
         return swingDistance;
+    }
+
+    private void RotateClubAboutPoint(float angle, Vector3 pivotPoint)
+    {
+        Quaternion clubRotation = Quaternion.AngleAxis(angle, perpendicularToSwing);
+
+        transform.position = pivotPoint - (clubRotation * (pivotPoint - swingPosition));
+        transform.rotation = clubRotation * swingRotation;
     }
 }
