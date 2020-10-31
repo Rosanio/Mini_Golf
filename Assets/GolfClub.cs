@@ -10,6 +10,10 @@ public class GolfClub : MonoBehaviour
     [SerializeField] float swingAnimationSpeed = 1.0f;
     [SerializeField] Text scoreText = null;
     [SerializeField] Text parText = null;
+    [SerializeField] AudioClip puttSound = null;
+    [SerializeField] AudioClip successSound = null;
+
+    AudioSource audioSource;
 
     // Game State
     private enum State { Positioning, Swinging, PlayingSwingAnimation, BallMoving, LevelComplete }
@@ -47,6 +51,7 @@ public class GolfClub : MonoBehaviour
         golfBallGameObject = GameObject.Find("GolfBall");
         golfBall = golfBallGameObject.GetComponent<GolfBall>();
         yOffsetClubToBall = transform.position.y - golfBallGameObject.transform.position.y;
+        audioSource = GetComponent<AudioSource>();
         
         // Initialize positioning state
         currentState = State.Positioning;
@@ -113,8 +118,7 @@ public class GolfClub : MonoBehaviour
     private void PlayingSwingAnimation()
     {
         float zAngle = transform.rotation.eulerAngles.z - (swingAnimationDegreesPerSecond * Time.deltaTime);
-        print(zAngle);
-        // zAngle resets to 360 when it goes to negatives, this will stop it rotating at -20 degrees
+        // zAngle resets to 360 when it goes to negatives, this will stop it rotating at -30 degrees
         if (zAngle < 300.0f || zAngle > 330.0f)
         {
             RotateClubAboutPoint(zAngle, swingPivotPoint);
@@ -182,6 +186,7 @@ public class GolfClub : MonoBehaviour
 
     private void Swing()
     {
+        audioSource.PlayOneShot(puttSound);
         golfBallGameObject.GetComponent<Rigidbody>().AddForce(clubToBallVector.normalized * -(forceMultiplier * swingDistance), ForceMode.Impulse);
     }
 
@@ -200,6 +205,7 @@ public class GolfClub : MonoBehaviour
             if (golfBall.ballInHole)
             {
                 currentState = State.LevelComplete;
+                audioSource.PlayOneShot(successSound);
                 print("Level complete!");
             }
             else
