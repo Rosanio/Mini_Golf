@@ -8,10 +8,15 @@ public class GolfClub : MonoBehaviour
     [SerializeField] SpriteRenderer arrow = null;
     [SerializeField] Slider swingPowerSlider = null;
     [SerializeField] float swingAnimationSpeed = 1.0f;
+    [SerializeField] Text scoreText = null;
+    [SerializeField] Text parText = null;
 
     // Game State
     private enum State { Positioning, Swinging, PlayingSwingAnimation, BallMoving, LevelComplete }
     private State currentState;
+
+    // User Score
+    private int levelScore = 0;
 
     // Useful reference values and vectors
     private float yOffsetClubToBall;
@@ -51,6 +56,9 @@ public class GolfClub : MonoBehaviour
         // Initialize UI
         arrow.enabled = true;
         swingPowerSlider.value = 0;
+        levelScore = 0;
+        scoreText.text = GetScoreText(levelScore);
+        parText.text = GetParText(2);
     }
 
     void Update()
@@ -188,6 +196,7 @@ public class GolfClub : MonoBehaviour
     {
         if (!golfBall.IsMoving)
         {
+            scoreText.text = GetScoreText(++levelScore);
             if (golfBall.ballInHole)
             {
                 currentState = State.LevelComplete;
@@ -233,5 +242,24 @@ public class GolfClub : MonoBehaviour
 
         transform.position = pivotPoint - (clubRotation * (pivotPoint - swingPosition));
         transform.rotation = clubRotation * swingRotation;
+    }
+
+    private string GetScoreText(int score)
+    {
+        return string.Format("Score: {0}", score);
+    }
+
+    private string GetParText(int par)
+    {
+        return string.Format("Par: {0}", par);
+    }
+
+    private int GetLevelPar(int levelIndex)
+    {
+        switch (levelIndex)
+        {
+            case 0: return 2;
+            default: return 0;
+        }
     }
 }
