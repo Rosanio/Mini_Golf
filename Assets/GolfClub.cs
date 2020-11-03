@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GolfClub : MonoBehaviour
 {
@@ -63,7 +64,8 @@ public class GolfClub : MonoBehaviour
         swingPowerSlider.value = 0;
         levelScore = 0;
         scoreText.text = GetScoreText(levelScore);
-        parText.text = GetParText(2);
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        parText.text = GetParText(GetLevelPar(currentSceneIndex));
     }
 
     void Update()
@@ -187,7 +189,7 @@ public class GolfClub : MonoBehaviour
     private void Swing()
     {
         audioSource.PlayOneShot(puttSound);
-        golfBallGameObject.GetComponent<Rigidbody>().AddForce(clubToBallVector.normalized * -(forceMultiplier * swingDistance), ForceMode.Impulse);
+        golfBall.Hit(clubToBallVector.normalized * -(forceMultiplier * swingDistance));
     }
 
     // Defined as a separate function so Invoke can be called correctly
@@ -204,17 +206,36 @@ public class GolfClub : MonoBehaviour
             scoreText.text = GetScoreText(++levelScore);
             if (golfBall.ballInHole)
             {
-                currentState = State.LevelComplete;
-                audioSource.PlayOneShot(successSound);
-                print("Level complete!");
+                LevelComplete();
             }
             else
             {
-                golfBallPosition = golfBallGameObject.transform.position;
-                swingPowerSlider.value = 0;
-                currentState = State.Positioning;
+                ResetToPositioningState();
             }
         }
+    }
+    private void LevelComplete()
+    {
+        currentState = State.LevelComplete;
+        audioSource.PlayOneShot(successSound);
+        Invoke(nameof(LoadNextScene), 1.0f);
+    }
+
+    private void LoadNextScene()
+    {
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        print(nextSceneIndex);
+        if (SceneManager.sceneCountInBuildSettings > nextSceneIndex)
+        {
+            SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex + 1);
+        }
+    }
+
+    private void ResetToPositioningState()
+    {
+        golfBallPosition = golfBallGameObject.transform.position;
+        swingPowerSlider.value = 0;
+        currentState = State.Positioning;
     }
 
     private Vector3 GetMousePositionInWorld()
@@ -265,6 +286,7 @@ public class GolfClub : MonoBehaviour
         switch (levelIndex)
         {
             case 0: return 2;
+            case 1: return 4;
             default: return 0;
         }
     }
