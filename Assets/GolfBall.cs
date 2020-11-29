@@ -12,6 +12,7 @@ public class GolfBall : MonoBehaviour
     private Rigidbody rigidBody;
     private Vector3 lastVelocity;
     private Vector3 lastSwingForce;
+    private Collision wallCollision;
     void Start()
     {
         rigidBody = GetComponent<Rigidbody>();
@@ -32,20 +33,33 @@ public class GolfBall : MonoBehaviour
 
     protected void OnCollisionEnter(Collision collision)
     {
+        print("Collision enter");
         if (collision.gameObject.tag == "Wall")
         {
             if (lastVelocity != Vector3.zero)
             {
-                print("Using last velocity");
-                print(lastVelocity.magnitude);
                 rigidBody.velocity = GetVelocityOnCollision(lastVelocity, collision);
             }
             else
             {
-                print("Using current velocity");
-                print(lastSwingForce.magnitude);
                 rigidBody.velocity = GetVelocityOnCollision(lastSwingForce, collision);
             }
+        }
+    }
+
+    protected void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.tag == "Wall")
+        {
+            wallCollision = collision;
+        }
+    }
+
+    protected void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.tag == "Wall")
+        {
+            wallCollision = null;
         }
     }
 
@@ -61,7 +75,21 @@ public class GolfBall : MonoBehaviour
 
     public void Hit(Vector3 swingVector)
     {
-        rigidBody.AddForce(swingVector, ForceMode.Impulse);
+        if (wallCollision != null)
+        {
+            // If the ball landed in a spot where it's already colliding with a wall, and the player swings into the wall,
+            // the ball should reflect in the opposite direction
+            Vector3 wallNormal = wallCollision.contacts[0].normal;
+            float angle = Vector3.Angle(swingVector, wallNormal);
+            if (angle > 90)
+            {
+                rigidBody.velocity = GetVelocityOnCollision(swingVector, wallCollision);
+            }
+        }
+        else
+        {
+            rigidBody.AddForce(swingVector, ForceMode.Impulse);
+        }
         lastSwingForce = swingVector;
     }
 

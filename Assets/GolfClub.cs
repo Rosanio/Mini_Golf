@@ -286,7 +286,8 @@ public class GolfClub : MonoBehaviour
         switch (levelIndex)
         {
             case 0: return 2;
-            case 1: return 4;
+            case 1: return 5;
+            case 2: return 2;
             default: return 0;
         }
     }
