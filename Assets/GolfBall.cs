@@ -70,6 +70,9 @@ public class GolfBall : MonoBehaviour
             StopMoving();
             SuccessParticles.Play();
             ballInHole = true;
+        } else if (other.gameObject.tag == "Booster")
+        {
+            ApplyBoosterVelocity(other.gameObject);
         }
     }
 
@@ -98,6 +101,11 @@ public class GolfBall : MonoBehaviour
         rigidBody.velocity = new Vector3(0, 0, 0);
         rigidBody.angularVelocity = new Vector3(0, 0, 0);
         IsMoving = false;
+    }
+
+    private void ApplyBoosterVelocity(GameObject booster)
+    {
+        rigidBody.velocity = rigidBody.velocity + (15 * -booster.transform.right);
     }
 
     private Vector3 GetVelocityOnCollision(Vector3 lastVelocity, Collision collision)
